@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: ai-detectify-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+    plan: free
+
+  - type: web
+    name: ai-detectify-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    plan: free
+```
+
+### Step 3: Fix `main.py` port binding
+
+Render injects `$PORT` dynamically. Your `main.py` startup event is fine, but make sure there's **no hardcoded port** in it. The `render.yaml` handles that via the start command.
+
+### Step 4: Update frontend `.env` for production
+
+The frontend needs to know the backend URL at **build time**. You can't use `localhost` in production. We'll set `VITE_API_URL` as a Render environment variable pointing to your deployed backend URL (you'll get this after deploying the backend first).
+
+Create `frontend/.env.production` in your repo:
+```
+VITE_API_URL=https://ai-detectify-backend.onrender.com
