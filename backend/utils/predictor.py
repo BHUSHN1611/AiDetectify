@@ -68,7 +68,7 @@ def _load_model():
 
     try:
         import tensorflow as tf
-        loaded   = tf.keras.models.load_model(abs_path)
+        loaded   = tf.keras.models.load_model(abs_path,compile=False)
         img_size = _detect_img_size(loaded)
         model    = loaded
         logger.info(
@@ -77,10 +77,10 @@ def _load_model():
         )
     except Exception as exc:
         logger.error("Failed to load model: %s — using fallback", exc)
-        model    = _build_fallback_model()
+        # model    = _build_fallback_model()
         img_size = FALLBACK_IMG_SIZE
 
-    return model
+    return None
 
 
 def _build_fallback_model():
