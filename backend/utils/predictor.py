@@ -62,13 +62,13 @@ def _load_model():
             "Place your trained detector_model.h5 there for real predictions.",
             abs_path,
         )
-        model    = _build_fallback_model()
+        # model    = _build_fallback_model()
         img_size = FALLBACK_IMG_SIZE
-        return model
+        return None
 
     try:
         import tensorflow as tf
-        loaded   = tf.keras.models.load_model(abs_path,compile=False)
+        loaded   = tf.keras.models.load_model(abs_path)
         img_size = _detect_img_size(loaded)
         model    = loaded
         logger.info(
@@ -83,27 +83,27 @@ def _load_model():
     return None
 
 
-def _build_fallback_model():
-    """
-    Tiny Sequential CNN with random weights — keeps the API alive when
-    no .h5 is present. Predictions are meaningless.
-    """
-    try:
-        import tensorflow as tf
-        m = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(FALLBACK_IMG_SIZE, FALLBACK_IMG_SIZE, 3)),
-            tf.keras.layers.Conv2D(8, 3, activation="relu"),
-            tf.keras.layers.GlobalAveragePooling2D(),
-            tf.keras.layers.Dense(1, activation="sigmoid"),
-        ])
-        logger.info(
-            "Fallback model built with random weights (input %dx%d).",
-            FALLBACK_IMG_SIZE, FALLBACK_IMG_SIZE,
-        )
-        return m
-    except Exception as exc:
-        logger.error("Could not build fallback model: %s", exc)
-        return None
+# def _build_fallback_model():
+#     """
+#     Tiny Sequential CNN with random weights — keeps the API alive when
+#     no .h5 is present. Predictions are meaningless.
+#     """
+#     try:
+#         import tensorflow as tf
+#         m = tf.keras.Sequential([
+#             tf.keras.layers.Input(shape=(FALLBACK_IMG_SIZE, FALLBACK_IMG_SIZE, 3)),
+#             tf.keras.layers.Conv2D(8, 3, activation="relu"),
+#             tf.keras.layers.GlobalAveragePooling2D(),
+#             tf.keras.layers.Dense(1, activation="sigmoid"),
+#         ])
+#         logger.info(
+#             "Fallback model built with random weights (input %dx%d).",
+#             FALLBACK_IMG_SIZE, FALLBACK_IMG_SIZE,
+#         )
+#         return m
+#     except Exception as exc:
+#         logger.error("Could not build fallback model: %s", exc)
+#         return None
 
 
 # ── Public API ────────────────────────────────────────
