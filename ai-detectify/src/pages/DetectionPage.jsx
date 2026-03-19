@@ -13,7 +13,7 @@ const MAX_MB = 10
 const SCAN_STEPS = [
   'Loading image data...',
   'Preprocessing pixels...',
-  'Running MobileNetV2 inference...',
+  'Running model inference...',
   'Analysing feature maps...',
   'Computing confidence scores...',
   'Generating report...',
@@ -271,103 +271,99 @@ export default function DetectionPage() {
 
       {/* Results */}
       {result && !loading && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Detection Results</h2>
-            <button onClick={reset} className="btn-secondary text-sm">Analyse Another</button>
+      <div className="space-y-5">
+
+    {/* Top bar */}
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Detection results</h2>
+      <button onClick={reset} className="btn-secondary text-sm">Analyse Another</button>
+    </div>
+
+    {/* Verdict banner */}
+    <div
+      className="glass-card p-4 flex items-center gap-4"
+      style={{ border: `1px solid ${isAI ? '#ef444440' : '#24a36640'}` }}
+    >
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+        style={{ background: isAI ? '#ef444415' : '#24a36615' }}
+      >
+        <verdict.Icon size={22} style={{ color: verdict.color }} />
+      </div>
+      <div>
+        <p className="font-bold text-lg" style={{ color: verdict.color }}>{verdict.label}</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {result.confidence ? `${Math.round(result.confidence * 100)}% confidence · ` : ''}{result.filename}
+        </p>
+      </div>
+    </div>
+
+    {/* Two-column grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+      {/* LEFT — image preview */}
+      <div className="rounded-2xl p-2">
+        <ImagePreview file={file} onRemove={reset} />
+      </div>
+
+      {/* RIGHT — rings + summary */}
+      <div className="glass-card p-5 space-y-4">
+        <h3 className="text-xs font-semibold tracking-widest" style={{ color: 'var(--text-secondary)' }}>
+          PROBABILITY BREAKDOWN
+        </h3>
+
+        {/* Rings */}
+        <div className="flex justify-around">
+          <ConfidenceRing value={Math.round(result.ai_probability ?? 0)} label="AI Generated" color="#ef4444" />
+          <ConfidenceRing value={Math.round(result.real_probability ?? 0)} label="Real Image"    color="#24a366" />
+        </div>
+
+        {/* Bar */}
+        <div>
+          <div className="flex justify-between text-xs font-mono mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+            <span>AI Generated</span><span>Real Photo</span>
           </div>
-
-          {/* Verdict banner */}
-          <div className={`glass-card p-5 flex items-center gap-4 border ${verdict.border}`}>
-            <div className={`w-12 h-12 rounded-2xl ${verdict.bg} flex items-center justify-center flex-shrink-0`}>
-              <verdict.Icon size={22} style={{ color: verdict.color }} />
-            </div>
-            <div>
-              <p className="font-bold text-lg" style={{ color: verdict.color }}>{verdict.label}</p>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {result.confidence
-                  ? `${Math.round(result.confidence * 100)}% confidence · ${result.filename}`
-                  : result.filename}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Probability rings */}
-            <div className="glass-card p-8">
-              <h3 className="font-semibold text-sm mb-6 text-center" style={{ color: 'var(--text-secondary)' }}>PROBABILITY BREAKDOWN</h3>
-              <div className="flex justify-around">
-                <ConfidenceRing
-                  value={Math.round(result.ai_probability ?? 0)}
-                  label="AI Generated"
-                  color="#ef4444"
-                />
-                <ConfidenceRing
-                  value={Math.round(result.real_probability ?? 0)}
-                  label="Real Image"
-                  color="#24a366"
-                />
-              </div>
-
-              {/* Bar */}
-              <div className="mt-6">
-                <div className="flex justify-between text-xs font-mono mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  <span>AI Generated</span>
-                  <span>Real Photo</span>
-                </div>
-                <div className="h-3 rounded-full overflow-hidden flex" style={{ background: 'var(--border)' }}>
-                  <div
-                    className="h-full bg-red-500 transition-all duration-1000"
-                    style={{ width: `${result.ai_probability ?? 0}%` }}
-                  />
-                  <div
-                    className="h-full bg-primary-500 transition-all duration-1000"
-                    style={{ width: `${result.real_probability ?? 0}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Summary table */}
-            <div className="space-y-4">
-              <div className="glass-card p-5">
-                <h3 className="font-semibold mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>ANALYSIS SUMMARY</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Filename',         value: result.filename },
-                    { label: 'Verdict',          value: result.prediction },
-                    { label: 'Confidence',        value: `${Math.round((result.confidence ?? 0) * 100)}%` },
-                    { label: 'AI Probability',   value: `${result.ai_probability ?? 0}%` },
-                    { label: 'Real Probability', value: `${result.real_probability ?? 0}%` },
-                    { label: 'Scanned at',        value: result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : '—' },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex justify-between text-sm">
-                      <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-                      <span
-                        className="font-medium truncate ml-4 max-w-[55%] text-right"
-                        style={{
-                          color: label === 'Verdict'
-                            ? (isAI ? '#ef4444' : '#24a366')
-                            : 'var(--text-primary)',
-                        }}
-                      >
-                        {value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="glass-card p-4 flex items-start gap-3">
-                <Info size={15} className="text-primary-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  Results are based on a MobileNetV2 CNN trained to detect GAN/diffusion model artefacts. Heavily edited photos may score higher. Always use human judgement alongside AI tools.
-                </p>
-              </div>
-            </div>
+          <div className="h-2.5 rounded-full overflow-hidden flex" style={{ background: 'var(--border)' }}>
+            <div className="h-full bg-red-500 transition-all duration-1000"  style={{ width: `${result.ai_probability ?? 0}%` }} />
+            <div className="h-full bg-primary-500 transition-all duration-1000" style={{ width: `${result.real_probability ?? 0}%` }} />
           </div>
         </div>
-      )}
+
+        {/* Summary rows */}
+        <div className="space-y-2 pt-1">
+          {[
+            { label: 'Filename',         value: result.filename },
+            { label: 'Verdict',          value: result.prediction },
+            { label: 'Confidence',       value: `${Math.round((result.confidence ?? 0) * 100)}%` },
+            { label: 'AI Probability',   value: `${result.ai_probability ?? 0}%` },
+            { label: 'Real Probability', value: `${result.real_probability ?? 0}%` },
+            { label: 'Scanned at',       value: result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : '—' },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex justify-between text-sm border-b pb-2" style={{ borderColor: 'var(--border)' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
+              <span
+                className="font-medium truncate ml-4 max-w-[55%] text-right"
+                style={{ color: label === 'Verdict' ? verdict.color : 'var(--text-primary)' }}
+              >
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Info note */}
+    <div className="glass-card p-4 flex items-start gap-3">
+      <Info size={14} className="text-primary-400 flex-shrink-0 mt-0.5" />
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        Results are based on a MobileNetV2 CNN trained to detect GAN/diffusion model artefacts.
+        Heavily edited photos may score higher. Always use human judgement alongside AI tools.
+      </p>
+    </div>
+
+  </div>
+)}
     </div>
   )
 }

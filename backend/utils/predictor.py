@@ -1,14 +1,3 @@
-"""
-predictor.py
-Loads the pretrained CNN model once at startup and exposes predict_image().
-
-The model file is expected at:
-    backend/model_detect/detector_model.h5
-
-IMG_SIZE is auto-detected from the model's input layer so this file never
-needs editing when you swap in a different model (128, 224, etc.).
-"""
-
 import os
 import io
 import logging
@@ -30,15 +19,6 @@ img_size = FALLBACK_IMG_SIZE   # will be overwritten once model is loaded
 
 
 def _detect_img_size(m) -> int:
-    """
-    Read the spatial input size directly from the loaded model so we
-    never have to hard-code it here.
-
-    Handles three common shapes:
-      (None, H, W, C)  – standard image model
-      (None, N)        – flat input (unusual but safe fallback)
-      None             – model has no declared input shape
-    """
     try:
         shape = m.input_shape          # e.g. (None, 128, 128, 3)
         if shape and len(shape) == 4:
