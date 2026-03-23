@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from routes.auth_routes import router as auth_router
 from routes.detect_routes import router as detect_router
+
 from utils.predictor import _load_model
 import logging
+
 
 logging.basicConfig(level=logging.INFO)
 

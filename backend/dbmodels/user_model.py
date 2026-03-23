@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 
-# ── Auth Models ───────────────────────────────────────
+# Auth Models
 class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
@@ -28,12 +28,12 @@ class UserOut(BaseModel):
     email: str
 
 
-# ── Detection Models ──────────────────────────────────
+# Detection Models
 class DetectionResult(BaseModel):
-    prediction: str          # "Real Image" | "AI Generated"
-    confidence: float        # 0.0 – 1.0
-    ai_probability: float    # percentage 0–100
-    real_probability: float  # percentage 0–100
+    prediction: str         
+    confidence: float       
+    ai_probability: float    
+    real_probability: float  
     filename: str
     timestamp: datetime
 
